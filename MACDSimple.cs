@@ -29,6 +29,7 @@ namespace NinjaTrader.Strategy
         private int donchianPeriod = 20; // Default setting for DonchianPeriod
         // User defined variables (add any user defined variables below)
 		private double StopLossPrice;
+		private double TakeProfitPrice;
 		private bool MACDCrossAbove = false;
 		private bool MACDCrossBelow = false;
         #endregion
@@ -49,30 +50,45 @@ namespace NinjaTrader.Strategy
         /// </summary>
         protected override void OnBarUpdate()
         {
-			if(CrossAbove((MACD(MACDFast, MACDSlow, MACDSingle).Diff, 0.005, 1))
+			// Signals
+			if(CrossAbove(MACD(MACDFast, MACDSlow, MACDSingle).Diff, 0.005, 1))
 			{
 				MACDCrossAbove = true;
+				MACDCrossBelow = false;
+			}
+			if(CrossBelow(MACD(MACDFast, MACDSlow, MACDSingle).Diff, -0.005, 1))
+			{
+				MACDCrossAbove = false;
+				MACDCrossBelow = true;
+			}
+			if(MACD(MACDFast, MACDSlow, MACDSingle).Diff[1] > MACD(MACDFast, MACDSlow, MACDSingle).Diff[0])
+			{
+				MACDCrossAbove = false;
+			}
+			if(MACD(MACDFast, MACDSlow, MACDSingle).Diff[1] < MACD(MACDFast, MACDSlow, MACDSingle).Diff[0])
+			{
+				MACDCrossBelow = false;
 			}
 			
-            // Enter Long/Short Position when Fast MA Cross Above Slow MA
-            if (CrossAbove(MACD(MACDFast, MACDSlow, MACDSingle).Diff, 0.005, 1)
-				//&& MACD(MACDFast, MACDSlow, MACDSingle)[0] > 0
-				)
-//                && Position.MarketPosition == MarketPosition.Flat)
+            // Enter Market
+            if (MACDCrossAbove)
             {
                 EnterLong(DefaultQuantity, "");
 				StopLossPrice = DonchianChannel(DonchianPeriod).Lower[1];
+				if (StopLossPrice > Close[0])
+				{StopLossPrice = 0;}					
+				TakeProfitPrice = (Close[0]-DonchianChannel(DonchianPeriod).Lower[1])*2+Close[0];
             }
-            if (CrossBelow(MACD(MACDFast, MACDSlow, MACDSingle).Diff, -0.005, 1)
-				//&& MACD(MACDFast, MACDSlow, MACDSingle)[0] < 0
-				)
-//                && Position.MarketPosition == MarketPosition.Flat)
+            if (MACDCrossBelow)
             {
                 EnterShort(DefaultQuantity, "");
 				StopLossPrice = DonchianChannel(DonchianPeriod).Upper[1];
+				if (StopLossPrice < Close[0])
+				{StopLossPrice = 0;}
+				TakeProfitPrice = Close[0]-(DonchianChannel(DonchianPeriod).Upper[1]-Close[0])*2;
             }
 
-            // StopLoss for Long/Short Position
+            // Exit
             if (Position.MarketPosition == MarketPosition.Long
 				&& StopLossPrice > 0
                 && Close[0] < StopLossPrice)
@@ -85,20 +101,15 @@ namespace NinjaTrader.Strategy
             {
                 ExitShort("", "");
             }
-
-            // Condition set 3
             if (Position.MarketPosition == MarketPosition.Long
-                && MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] < 0)
+				&& TakeProfitPrice > 0
+                && Close[0] > TakeProfitPrice)
             {
                 ExitLong("", "");
             }
-			
-            
-
-
-            // Condition set 3
             if (Position.MarketPosition == MarketPosition.Short
-                && MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] > 0)
+				&& TakeProfitPrice > 0
+                && Close[0] < TakeProfitPrice)
             {
                 ExitShort("", "");
             }
