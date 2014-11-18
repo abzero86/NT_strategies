@@ -32,6 +32,10 @@ namespace NinjaTrader.Strategy
 		private double TakeProfitPrice;
 		private bool MACDCrossAbove = false;
 		private bool MACDCrossBelow = false;
+		private bool PriceNewHigh = false;
+		private bool PriceNewLow = false;
+		private bool MACDNewHigh = false;
+		private bool MACDNewLow = false;
         #endregion
 
         /// <summary>
@@ -41,7 +45,8 @@ namespace NinjaTrader.Strategy
         {
             //Add(DonchianChannel(DonchianPeriod));
             Add(MACD(MACDFast, MACDSlow, MACDSingle));
-			Add(SMA(MACDFast));
+			Add(EMA(MACDFast));
+			Add(EMA(MACDSlow));
             CalculateOnBarClose = true;
         }
 
@@ -87,6 +92,21 @@ namespace NinjaTrader.Strategy
 				{StopLossPrice = 0;}
 				TakeProfitPrice = Close[0]-(DonchianChannel(DonchianPeriod).Upper[1]-Close[0])*2;
             }
+			if (MACDNewHigh && (!PriceNewHigh))
+			{
+				EnterLong(DefaultQuantity, "");
+				StopLossPrice = DonchianChannel(DonchianPeriod).Lower[1];
+				if (StopLossPrice > Close[0])
+				{StopLossPrice = 0;}		
+			}
+			if (MACDNewLow && (!PriceNewLow))
+			{
+				EnterShort(DefaultQuantity, "");
+				StopLossPrice = DonchianChannel(DonchianPeriod).Upper[1];
+				if (StopLossPrice < Close[0])
+				{StopLossPrice = 0;}		
+			}
+			
 
             // Exit
             if (Position.MarketPosition == MarketPosition.Long
