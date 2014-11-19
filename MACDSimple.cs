@@ -131,7 +131,6 @@ namespace NinjaTrader.Strategy
 //				}
 //				EMAPreviousLow = EMA(Close,12)[2];
 //			}
-			
             // Enter Market
 //            if (MACDCrossAbove)
 //            {
@@ -177,7 +176,8 @@ namespace NinjaTrader.Strategy
 					+ ", BarNumber = " + CurrentBars[0].ToString()
 					+ ", BarDiff = " + BarDiff.ToString(), LogLevel.Information);
 					if (Close[0] < Close[BarDiff]
-						&& MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] > MACD(MACDFast, MACDSlow, MACDSingle).Diff[BarDiff] )
+						&& MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] > MACD(MACDFast, MACDSlow, MACDSingle).Diff[BarDiff]
+						&& EMA(Close,MACDFast)[0] < EMA(Close,MACDSlow)[0])
 					{
 						EnterShort(DefaultQuantity, "");
 					}
@@ -194,7 +194,8 @@ namespace NinjaTrader.Strategy
 					+ " MACD = " + MACD(MACDFast, MACDSlow, MACDSingle).Diff[0].ToString()
 					+ ", BarNumber = "+CurrentBars[0].ToString()+", BarDiff = "+BarDiff.ToString(), LogLevel.Information);
 					if (Close[0] > Close[BarDiff]
-						&& MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] < MACD(MACDFast, MACDSlow, MACDSingle).Diff[BarDiff] )
+						&& MACD(MACDFast, MACDSlow, MACDSingle).Diff[0] < MACD(MACDFast, MACDSlow, MACDSingle).Diff[BarDiff] 
+						&& EMA(Close,MACDFast)[0] > EMA(Close,MACDSlow)[0])
 					{
 						EnterLong(DefaultQuantity, "");
 					}
